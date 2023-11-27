@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import pymongo
 import os
+import asyncio
+from services import mongo, dto, user_service
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -33,8 +34,12 @@ async def slash_add_party_gold(
     interaction: discord.Interaction,
     gold: int
 ):
-    print(interaction.user.id)
-    await interaction.response.send_message(f"Adding gold: {gold}")
+    user = await user_service.get_or_insert_user(interaction.user.id)
+
+    has_party = await user_service.check_user_party(user, interaction)
+
+    if (has_party):
+        await interaction.response.send_message(f"Adding gold: {gold}")
     
 @bot.tree.command(
     name="setparty",
@@ -44,9 +49,12 @@ async def slash_set_party(
     interaction: discord.Interaction,
     name: str
 ):
-    user = interaction.user
-    
-    await interaction.response.send_message(f"Set party to `{name}` for {user.mention}")
+    discord_user = interaction.user
+
+    user = await user_service.get_or_insert_user(discord_user.id)
+    await user_service.set_party(discord_user.id, name)
+
+    await interaction.response.send_message(f"Set party to `{name}` for {discord_user.mention}")
 
 
 bot.run(TOKEN)
