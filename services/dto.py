@@ -10,5 +10,12 @@ class UserDto:
 @dataclass
 class ItemDto:
     name: str = "None"
-    value: Dict[str, int] = field(default_factory=lambda: {"pp": 0, "gp": 0, "ep": 0, "sp": 0, "cp": 0})
+    value: Dict[str, int] = field(default_factory=lambda: {"pp": 0, "gp": 0,"sp": 0, "cp": 0})
     rarity: str = "None"
+
+@dataclass
+class PartyGoldDto:
+    pp: int = 0,
+    gp: int = 0,
+    sp: int = 0,
+    cp: int = 0
