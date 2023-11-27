@@ -10,3 +10,6 @@ async def get_party_gold(party_name: str):
     del gold["_id"]
     
     return dto.ItemDto(**gold)
+
+async def set_party_gold(party_name: str, new_party_gold: dto.PartyGoldDto):
+    await mongo.update_one({"name": "Gold"}, {"value": new_party_gold.__dict__}, party_name)
