@@ -4,7 +4,6 @@ from services import dto, mongo
 _collection = "users"
 
 async def check_user_party(user: dto.UserDto, interaction: discord.Interaction) -> bool:
-
     has_party: bool = True
 
     if (user.currentParty == ""):

@@ -3,7 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 import asyncio
-from services import mongo, dto, user_service
+from services import mongo, dto, user_service, party_service
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -24,7 +24,13 @@ async def on_ready():
 async def slash_party_gold(
     interaction: discord.Interaction
 ):
-    await interaction.response.send_message("Party Gold = 55g 77sp")
+    user = await user_service.get_or_insert_user(interaction.user.id)
+
+    has_party = await user_service.check_user_party(user, interaction)
+
+    if (has_party):
+        gold = await party_service.get_party_gold(user.currentParty)
+        await interaction.response.send_message(f"Party Gold = {gold.value}")
     
 @bot.tree.command(
     name="addgold",
@@ -51,7 +57,6 @@ async def slash_set_party(
 ):
     discord_user = interaction.user
 
-    user = await user_service.get_or_insert_user(discord_user.id)
     await user_service.set_party(discord_user.id, name)
 
     await interaction.response.send_message(f"Set party to `{name}` for {discord_user.mention}")
