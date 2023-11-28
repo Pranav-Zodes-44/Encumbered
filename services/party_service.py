@@ -17,10 +17,22 @@ async def set_party_gold(party_name: str, new_party_gold: dto.PartyGoldDto):
 
 
 def add_mula(current_party_gold: dto.PartyGoldDto, gold_change: dto.PartyGoldDto):
-	current_party_gold.pp += gold_change.pp
-	current_party_gold.gp += gold_change.gp
-	current_party_gold.sp += gold_change.sp
-	current_party_gold.cp += gold_change.cp
+	new_party_gold = current_party_gold
+	
+	new_party_gold.pp += gold_change.pp
+	new_party_gold.gp += gold_change.gp
+	new_party_gold.sp += gold_change.sp
+	new_party_gold.cp += gold_change.cp
 	
 	return current_party_gold
 
+
+def minus_mula(current_party_gold: dto.PartyGoldDto, gold_change: dto.PartyGoldDto):
+	new_party_gold = current_party_gold
+
+	new_party_gold.pp -= gold_change.pp
+	new_party_gold.gp -= gold_change.gp
+	new_party_gold.sp -= gold_change.sp
+	new_party_gold.cp -= gold_change.cp
+	
+	return new_party_gold

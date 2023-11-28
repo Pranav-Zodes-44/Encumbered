@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import asyncio
 from services import mongo, dto, user_service, party_service, embed_service
+from copy import copy
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -17,9 +18,8 @@ async def on_ready():
 	await bot.tree.sync()
 	print("Bot connected.")
 
-
 @bot.tree.command(
-	name="gold",
+	name="getgold",
 	description="Tracks the party gold"
 )
 async def slash_party_gold(
@@ -34,7 +34,6 @@ async def slash_party_gold(
 		
 		embed = embed_service.get_gold_embed(dto.PartyGoldDto(**gold.value), user, interaction)
 		await interaction.response.send_message(embed=embed)
-
 
 @bot.tree.command(
 	name="addmula",
@@ -61,11 +60,49 @@ async def slash_add_party_gold(
 			sp=sp,
 			cp=cp
 		)
-		new_gold = party_service.add_mula(current_gold, gold_change)
+		
+		await interaction.response.send_message(f"Doing the calculations :brain:")
+
+		new_gold = party_service.add_mula(copy(current_gold), gold_change)
+
+		embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
+		message = await interaction.channel.send(embed=embed)
+		await party_money_change(message, user, interaction, new_gold)
+
+@bot.tree.command(
+		name="minusmula",
+		description="Remove money from party"
+)
+async def slash_minus_mula(
+	interaction: discord.Interaction,
+	pp: int = 0,
+	gp: int = 0,
+	sp: int = 0,
+	cp: int = 0
+):
+	user = await user_service.get_or_insert_user(interaction.user.id)
+
+	has_party = await user_service.check_user_party(user, interaction)
+
+	if (has_party):
+		gold_item = await party_service.get_party_gold(user.currentParty)
+		current_gold = dto.PartyGoldDto(**gold_item.value)
+
+		gold_change = dto.PartyGoldDto(
+			pp=pp,
+			gp=gp,
+			sp=sp,
+			cp=cp
+		)
+
+		await interaction.response.send_message("Taking the money from the party bank :ninja:")
+
+		new_gold = party_service.minus_mula(copy(current_gold), gold_change)
 		
 		embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
 		message = await interaction.channel.send(embed=embed)
 		await party_money_change(message, user, interaction, new_gold)
+
 
 @bot.tree.command(
 	name="setparty",
@@ -129,6 +166,7 @@ async def party_money_change(
 	except asyncio.TimeoutError as e:
 		await message.delete()
 		await interaction.channel.send("Timer expired, please try again.")
+		return
 	
 	await party_service.set_party_gold(user.currentParty, new_party_gold)
 
