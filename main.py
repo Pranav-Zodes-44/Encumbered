@@ -19,7 +19,7 @@ async def on_ready():
 	print("Bot connected.")
 
 @bot.tree.command(
-	name="getgold",
+	name="getmula",
 	description="Tracks the party gold"
 )
 async def slash_party_gold(
@@ -120,7 +120,7 @@ async def slash_set_party(
 
 
 @bot.tree.command(
-	name="setgold",
+	name="setmula",
 	description="Set the gold of your current party"
 )
 async def slash_set_gold(
