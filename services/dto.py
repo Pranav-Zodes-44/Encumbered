@@ -3,19 +3,23 @@ from typing import List, Dict
 
 @dataclass
 class UserDto:
-    userId: int
-    currentParty: str = ""
-    parties: List[str] = field(default_factory=list)
+	userId: int
+	currentParty: str = ""
+	parties: List[str] = field(default_factory=list)
 
 @dataclass
 class ItemDto:
-    name: str = "None"
-    value: Dict[str, int] = field(default_factory=lambda: {"pp": 0, "gp": 0,"sp": 0, "cp": 0})
-    rarity: str = "None"
+	name: str = "None"
+	value: Dict[str, int] = field(default_factory=lambda: {"pp": 0, "gp": 0,"sp": 0, "cp": 0})
+	rarity: str = "None"
+	notes: str = "None"
+	weight: int = 0
+	quantity: int = 1
+	ddb: str = "none"
 
 @dataclass
 class PartyGoldDto:
-    pp: int = 0,
-    gp: int = 0,
-    sp: int = 0,
-    cp: int = 0
+	pp: int = 0,
+	gp: int = 0,
+	sp: int = 0,
+	cp: int = 0
