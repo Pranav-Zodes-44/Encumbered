@@ -3,7 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 import asyncio
-from services import mongo, dto, user_service, party_service, embed_service
+from services import mongo, dto, mula_service, user_service, embed_service, item_service
 from copy import copy
 
 load_dotenv()
@@ -30,7 +30,7 @@ async def slash_party_gold(
 	has_party = await user_service.check_user_party(user, interaction)
 
 	if (has_party):
-		gold = await party_service.get_party_gold(user.currentParty)
+		gold = await mula_service.get_party_gold(user.currentParty)
 		
 		embed = embed_service.get_gold_embed(dto.PartyGoldDto(**gold.value), user, interaction)
 		await interaction.response.send_message(embed=embed)
@@ -51,7 +51,7 @@ async def slash_add_party_gold(
 	has_party = await user_service.check_user_party(user, interaction)
 
 	if (has_party):
-		gold_item = await party_service.get_party_gold(user.currentParty)
+		gold_item = await mula_service.get_party_gold(user.currentParty)
 		current_gold = dto.PartyGoldDto(**gold_item.value)
 
 		gold_change = dto.PartyGoldDto(
@@ -63,11 +63,12 @@ async def slash_add_party_gold(
 		
 		await interaction.response.send_message(f"Doing the calculations :brain:")
 
-		new_gold = party_service.add_mula(copy(current_gold), gold_change)
+		new_gold = mula_service.add_mula(copy(current_gold), gold_change)
 
 		embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
 		message = await interaction.channel.send(embed=embed)
 		await party_money_change(message, user, interaction, new_gold)
+
 
 @bot.tree.command(
 		name="minusmula",
@@ -85,7 +86,7 @@ async def slash_minus_mula(
 	has_party = await user_service.check_user_party(user, interaction)
 
 	if (has_party):
-		gold_item = await party_service.get_party_gold(user.currentParty)
+		gold_item = await mula_service.get_party_gold(user.currentParty)
 		current_gold = dto.PartyGoldDto(**gold_item.value)
 
 		gold_change = dto.PartyGoldDto(
@@ -97,7 +98,7 @@ async def slash_minus_mula(
 
 		await interaction.response.send_message("Taking the money from the party bank :ninja:")
 
-		new_gold = party_service.minus_mula(copy(current_gold), gold_change)
+		new_gold = mula_service.minus_mula(copy(current_gold), gold_change)
 		
 		embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
 		message = await interaction.channel.send(embed=embed)
@@ -144,12 +145,40 @@ async def slash_set_gold(
 
 		await interaction.response.send_message(f'Getting gold for {user.currentParty} :timer:')
 
-		current_party_gold = await party_service.get_party_gold(user.currentParty)
+		current_party_gold = await mula_service.get_party_gold(user.currentParty)
 
 		embed = embed_service.get_gold_embed(dto.PartyGoldDto(**current_party_gold.value), user, interaction, new_party_gold)
 
 		message = await interaction.channel.send(embed=embed)
 		await party_money_change(message, user, interaction, new_party_gold)
+
+
+@bot.tree.command(
+	name="additem",
+	description="Add an item to your party's inventory"
+)
+async def slash_add_item(
+	interaction: discord.Interaction,
+	name: str,
+	rarity: str = "",
+	notes: str = "",
+	weight: int = 0,
+	quantity: int = 1,
+	ddb_link: str = ""
+):
+	if (quantity < 1):
+		await interaction.response.send_message("Quantity cannot be 0 for an item that you are adding!")
+		return
+	
+	if (name.lower() == "gold"):
+		await interaction.response.send_message("Please use any of the 'mula' commands to deal with the party gold :moneybag:")
+		return
+	
+	#Call create_or_update_item assigning it to 2 vars, item and updated.
+	#Send wait_for response for the value of the item.
+	#Delete messages
+	#Send item as embed, use diff string if updating an original item.
+
 
 
 async def party_money_change(
@@ -168,11 +197,13 @@ async def party_money_change(
 		await interaction.channel.send("Timer expired, please try again.")
 		return
 	
-	await party_service.set_party_gold(user.currentParty, new_party_gold)
+	await mula_service.set_party_gold(user.currentParty, new_party_gold)
 
 	embed = embed_service.get_gold_embed(new_party_gold, user, interaction)
 	await message.clear_reactions()
 	await message.edit(content=f"**Successfully updated party gold for {user.currentParty} :money_mouth:**", embed=embed)
+
+
 
 
 bot.run(TOKEN)
