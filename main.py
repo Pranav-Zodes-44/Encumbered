@@ -9,7 +9,7 @@ from copy import copy
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 
-GUILD_IDS = [1121424199576191016, 1178763010140020836]
+GUILD_IDS = [1121424199576191016, 1178763010140020836, 1181656816753586267]
 INTENTS = discord.Intents.all() 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!!"), intents=INTENTS, debug_guilds = GUILD_IDS)
 
