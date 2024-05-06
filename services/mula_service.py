@@ -4,7 +4,7 @@ async def get_party_gold(party_name: str):
 	gold = await mongo.find_one({"name": "Gold"}, party_name)
 
 	if (gold == None):
-		await mongo.insert_one(dto.ItemDto(name="Gold", rarity="Gold"), party_name)
+		await mongo.insert_one(dto.ItemDto(name="Gold", rarity="Gold", value=dto.PartyGoldDto().__dict__).__dict__, party_name)
 		gold = await mongo.find_one({"name": "Gold"}, party_name)
 
 	del gold["_id"]
@@ -24,7 +24,7 @@ def add_mula(current_party_gold: dto.PartyGoldDto, gold_change: dto.PartyGoldDto
 	new_party_gold.sp += gold_change.sp
 	new_party_gold.cp += gold_change.cp
 	
-	return current_party_gold
+	return new_party_gold
 
 
 def minus_mula(current_party_gold: dto.PartyGoldDto, gold_change: dto.PartyGoldDto):
