@@ -4,8 +4,8 @@ from discord import app_commands
 from dotenv import load_dotenv
 import os
 import asyncio
-from services import mongo, dto, mula_service, user_service, embed_service, item_service, message_service
-from copy import copy, deepcopy
+from services import dto, mula_service, user_service, embed_service, item_service, message_service
+from copy import copy
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
