@@ -1,24 +1,25 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
 import os
 import asyncio
-from services import mongo, dto, mula_service, user_service, embed_service, item_service
-from copy import copy
+from services import mongo, dto, mula_service, user_service, embed_service, item_service, message_service
+from copy import copy, deepcopy
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 
 GUILD_IDS = [1121424199576191016, 1178763010140020836, 1181656816753586267]
 INTENTS = discord.Intents.all() 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!!"), intents=INTENTS, debug_guilds = GUILD_IDS)
+BOT = commands.Bot(command_prefix=commands.when_mentioned_or("!!"), intents=INTENTS, debug_guilds = GUILD_IDS)
 
-@bot.event
+@BOT.event
 async def on_ready():
-	await bot.tree.sync()
+	await BOT.tree.sync()
 	print("Bot connected.")
 
-@bot.tree.command(
+@BOT.tree.command(
 	name="getmula",
 	description="Tracks the party gold"
 )
@@ -35,7 +36,7 @@ async def slash_party_gold(
 		embed = embed_service.get_gold_embed(dto.PartyGoldDto(**gold.value), user, interaction)
 		await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(
+@BOT.tree.command(
 	name="addmula",
 	description="Add money to party"
 )
@@ -70,7 +71,7 @@ async def slash_add_party_gold(
 		await party_money_change(message, user, interaction, new_gold)
 
 
-@bot.tree.command(
+@BOT.tree.command(
 		name="minusmula",
 		description="Remove money from party"
 )
@@ -105,7 +106,7 @@ async def slash_minus_mula(
 		await party_money_change(message, user, interaction, new_gold)
 
 
-@bot.tree.command(
+@BOT.tree.command(
 	name="setparty",
 	description="Set your current party to an existing or new party"
 )
@@ -120,7 +121,7 @@ async def slash_set_party(
 	await interaction.response.send_message(f"Set party to `{name}` for {discord_user.mention}")
 
 
-@bot.tree.command(
+@BOT.tree.command(
 	name="setmula",
 	description="Set the gold of your current party"
 )
@@ -153,18 +154,32 @@ async def slash_set_gold(
 		await party_money_change(message, user, interaction, new_party_gold)
 
 
-@bot.tree.command(
+@BOT.tree.command(
 	name="additem",
 	description="Add an item to your party's inventory"
+)
+@app_commands.choices( 
+	rarity =
+		[
+			app_commands.Choice(name="Common", value="common"),
+			app_commands.Choice(name="Uncommon", value="uncommon"),
+			app_commands.Choice(name="Rare", value="rare"),
+			app_commands.Choice(name="Very Rare", value="very rare"),
+			app_commands.Choice(name="Legendary", value="legendary"),
+			app_commands.Choice(name="Artifact", value="artifact")
+		]
 )
 async def slash_add_item(
 	interaction: discord.Interaction,
 	name: str,
-	rarity: str = "",
-	notes: str = "",
-	weight: int = 0,
-	quantity: int = 1,
-	ddb_link: str = ""
+	rarity: app_commands.Choice[str],
+	weight: int,
+	quantity: int,
+	pp: int,
+	gp: int,
+	sp: int,
+	cp: int,
+	notes: str = ""
 ):
 	if (quantity < 1):
 		await interaction.response.send_message("Quantity cannot be 0 for an item that you are adding!")
@@ -174,23 +189,48 @@ async def slash_add_item(
 		await interaction.response.send_message("Please use any of the 'mula' commands to deal with the party gold :moneybag:")
 		return
 	
-	#Call create_or_update_item assigning it to 2 vars, item and updated.
-	#Send wait_for response for the value of the item.
-	#Delete messages
-	#Send item as embed, use diff string if updating an original item.
+	user = await user_service.get_or_insert_user(interaction.user.id)
+	
+	has_party = await user_service.check_user_party(user, interaction)
 
+	if (has_party):
+
+		new_item = dto.ItemDto(
+			name = name,
+			rarity = rarity.value,
+			notes = notes,
+			weight = weight,
+			value = dto.PartyGoldDto(
+				pp=pp,
+				gp=gp,
+				sp=sp,
+				cp=cp
+			),
+			quantity = quantity
+		)
+
+		await interaction.response.send_message(f"Adding {new_item.name} to {user.currentParty} :inbox_tray:")
+		item, updated_item = await item_service.create_or_update_item(user.currentParty, new_item)
+
+		embed = embed_service.get_item_embed(item, user, interaction, updated_item)
+		message = await interaction.channel.send(embed=embed)
+
+		if (updated_item is not None):
+			item = updated_item
+
+		await message_service.confirm_item_add(message, user, interaction, item, BOT, updated_item)
 
 
 async def party_money_change(
-		message: discord.Message, 
-		user: dto.UserDto, 
-		interaction: discord.Interaction, 
-		new_party_gold: dto.PartyGoldDto
+	message: discord.Message, 
+	user: dto.UserDto, 
+	interaction: discord.Interaction, 
+	new_party_gold: dto.PartyGoldDto
 ):
 	await message.add_reaction('🫡')
 
 	try:
-		await bot.wait_for('reaction_add',
+		await BOT.wait_for('reaction_add',
 						check=lambda reaction, user: reaction.emoji == '🫡' and user.id == interaction.user.id, timeout=15)
 	except asyncio.TimeoutError as e:
 		await message.delete()
@@ -204,6 +244,4 @@ async def party_money_change(
 	await message.edit(content=f"**Successfully updated party gold for {user.currentParty} :money_mouth:**", embed=embed)
 
 
-
-
-bot.run(TOKEN)
+BOT.run(TOKEN)
