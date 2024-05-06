@@ -11,10 +11,10 @@ _client = AsyncIOMotorClient(_mongostring, server_api=ServerApi('1'))
 db = _client.main
 
 async def insert_one(document, collection: str):
-    await db[collection].insert_one(document.__dict__)
+    await db[collection].insert_one(document)
 
 async def update_one(filter: dict, new_value: dict, collection: str):
-    await db[collection].update_one(filter, {"$set": new_value})
+    await db[collection].update_one(filter, {"$set": new_value}, upsert=True)
 
 async def find_one(filter: dict, collection: str):
     document = await db[collection].find_one(filter)

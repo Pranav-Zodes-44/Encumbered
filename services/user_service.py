@@ -17,7 +17,7 @@ async def get_or_insert_user(user_id: int):
     user = await mongo.find_one(filter, _collection)
 
     if (user == None):
-        await mongo.insert_one(dto.UserDto(userId=user_id), "users")
+        await mongo.insert_one(dto.UserDto(userId=user_id).__dict__, "users")
         user = await mongo.find_one(filter, _collection)
 
     del user["_id"]

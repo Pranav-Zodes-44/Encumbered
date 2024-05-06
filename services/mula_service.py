@@ -4,7 +4,7 @@ async def get_party_gold(party_name: str):
 	gold = await mongo.find_one({"name": "Gold"}, party_name)
 
 	if (gold == None):
-		await mongo.insert_one(dto.ItemDto(name="Gold", rarity="Gold", value=dto.PartyGoldDto().__dict__), party_name)
+		await mongo.insert_one(dto.ItemDto(name="Gold", rarity="Gold", value=dto.PartyGoldDto().__dict__).__dict__, party_name)
 		gold = await mongo.find_one({"name": "Gold"}, party_name)
 
 	del gold["_id"]
