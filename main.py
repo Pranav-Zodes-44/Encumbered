@@ -129,7 +129,7 @@ async def slash_get_party(
 ):
 	discord_user = interaction.user
 
-	party = await user_service.get_party(discord_user.id)
+	party = await user_service.get_user_party(discord_user.id)
 
 	if (party == ""):
 		await interaction.response.send_message(f"You currently have no party set. Please use **/setparty** do so :troll:.")
