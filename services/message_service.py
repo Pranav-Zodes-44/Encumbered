@@ -1,5 +1,5 @@
 import discord
-from services import dto, embed_service, mongo, item_service
+from services import dto, embed_service, item_service
 import asyncio
 
 async def confirm_item_add(
@@ -26,7 +26,7 @@ async def confirm_item_add(
 	await react_message.delete()
 	
 	if (updated_item is not None):
-		await mongo.update_one({"name": item.name}, item_service.item_to_dict(item), user.currentParty)
+		await item_service.update_item(user.currentParty, item)
 
 	embed = embed_service.get_item_embed(item, user, interaction)
 
