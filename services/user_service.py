@@ -35,6 +35,11 @@ async def set_party(user_id: int, party_name):
 
     await mongo.update_one(filter, {"currentParty": party_name, "parties": user_parties}, _collection)
 
+async def get_party(user_id: int):
+    user = await get_or_insert_user(user_id)
+
+    return user.currentParty
+
 
 
 
