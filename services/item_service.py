@@ -42,7 +42,7 @@ async def update_item(
 	party_name: str,
 	item: dto.ItemDto
 ):
-	await mongo.update_one({"name": item.name}, item, party_name) 
+	await mongo.update_one({"name": item.name}, item_to_dict(item), party_name) 
 
 
 def update_notes(
