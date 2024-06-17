@@ -89,14 +89,42 @@ def get_updated_item_embed(
 
     embed = Embed(title=f"{user.currentParty}: {item.name}", description=description, colour=rarity[updated_item.rarity])
     embed.add_field(name="Quantity", value=quantity_str, inline=False)
+    embed.add_field(name="Notes", value=notes_str, inline=False)
     embed.add_field(name="Weight", value=weight_str, inline=False)
     embed.add_field(name="Rarity", value=rarity_str, inline=False)
-    embed.add_field(name="Notes", value=notes_str, inline=False)
     embed.add_field(name="Value:", value="", inline=False)
     embed.add_field(name="", value=pp_str, inline=False)
     embed.add_field(name="", value=gold_str, inline=False)
     embed.add_field(name="", value=silver_str, inline=False)
     embed.add_field(name="", value=copper_str, inline=False)
+
+    return embed
+
+def get_rope_embed(
+    new_rope: dto.ItemDto,
+    user: dto.UserDto,
+    interaction: Interaction,
+    updated_rope: dto.ItemDto = None,
+    change_type: str = ""
+):
+    embed = Embed(title=f"{user.currentParty}: Rope :knot:", colour=0x43270F)
+
+    description: str = f"{user.currentParty}'s rope collection"
+
+    length_str = f"{new_rope.quantity}ft"
+
+    if (change_type != "" and updated_rope != None):
+        old_length = (updated_rope.quantity - new_rope.quantity) if change_type == "add" else (updated_rope.quantity + new_rope.quantity)
+
+        description = f"{new_rope.quantity}ft of rope, {change_type}ed by {interaction.user.mention}"
+
+        length_str = f"{old_length} :arrow_right: {updated_rope.quantity}"
+
+    embed.description = description
+    
+    embed.set_image(url="https://cdn.discordapp.com/attachments/1178763011226337374/1250148497164992582/80368935_2948706871814793_2924688968400240640_n.jpg?ex=6669e304&is=66689184&hm=2dc7199648a9ad0ad59c1062119308cb1c5c2f7a3a1f5437d8ae4f0184a41562&")
+
+    embed.add_field(name="Length", value=length_str)
 
     return embed
 
