@@ -1,4 +1,4 @@
-from services import dto
+from services import dto, transaction_service
 from discord import Embed, Interaction
 
 icons: dict = {
@@ -125,6 +125,32 @@ def get_rope_embed(
     embed.set_image(url="https://cdn.discordapp.com/attachments/1178763011226337374/1250148497164992582/80368935_2948706871814793_2924688968400240640_n.jpg?ex=6669e304&is=66689184&hm=2dc7199648a9ad0ad59c1062119308cb1c5c2f7a3a1f5437d8ae4f0184a41562&")
 
     embed.add_field(name="Length", value=length_str)
+
+    return embed
+
+
+def get_transaction_embed(
+    user: dto.UserDto,
+    interaction: Interaction,
+    transactions: list[dto.TransactionDto]
+):
+    embed = Embed(title=f"{user.currentParty}: Transactions :bank:", colour=0x355E3B)
+    embed.add_field(name="Legend", value=":pencil2: - Set mula", inline=False)
+    embed.add_field(name="", value=":inbox_tray: - Add mula", inline=False)
+    embed.add_field(name="", value=":outbox_tray: - Minus mula", inline=False)
+    embed.add_field(name="", value="", inline=False)
+
+    transaction_data = transaction_service.get_transaction_strings(transactions)
+
+    embed.add_field(name="Transactions", value="", inline=False)
+
+    for transaction in transaction_data:
+        embed.add_field(name="", value=transaction, inline=False)
+
+    embed.add_field(name="", value="", inline=False)
+    
+
+    embed.set_footer(text=f"Requested by @{interaction.user.display_name} || Member of {user.currentParty}")
 
     return embed
 
