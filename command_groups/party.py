@@ -4,7 +4,6 @@ from services import user_service
 class PartyCommands(discord.app_commands.Group):
 	...
 
-
 	@discord.app_commands.command(
 		name="set",
 		description="Set your current party to an existing or new party"
