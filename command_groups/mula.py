@@ -2,7 +2,6 @@ import discord
 from services import user_service, mula_service, embed_service, dto, message_service
 from copy import copy
 
-
 class MulaCommands(discord.app_commands.Group):
 	...
 	bot: discord.Client
@@ -26,7 +25,7 @@ class MulaCommands(discord.app_commands.Group):
 		if (has_party):
 			gold = await mula_service.get_party_gold(user.currentParty)
 			
-			embed = embed_service.get_gold_embed(dto.PartyGoldDto(**gold.value), user, interaction)
+			embed = embed_service.get_gold_embed(gold.value, user, interaction)
 			await interaction.response.send_message(embed=embed)
 
 
@@ -48,7 +47,7 @@ class MulaCommands(discord.app_commands.Group):
 
 		if (has_party):
 			gold_item = await mula_service.get_party_gold(user.currentParty)
-			current_gold = dto.PartyGoldDto(**gold_item.value)
+			current_gold = gold_item.value
 
 			gold_change = dto.PartyGoldDto(
 				pp=pp,
@@ -60,6 +59,7 @@ class MulaCommands(discord.app_commands.Group):
 			await interaction.response.send_message(f"Doing the calculations :brain:")
 
 			new_gold = mula_service.add_mula(copy(current_gold), gold_change)
+			await mula_service.track_transaction(user.currentParty, "add", copy(current_gold), copy(gold_change))
 
 			embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
 			message = await interaction.channel.send(embed=embed)
@@ -67,7 +67,7 @@ class MulaCommands(discord.app_commands.Group):
 
 
 	@discord.app_commands.command(
-		name="minusmula",
+		name="minus",
 		description="Remove money from party"
 	)
 	async def slash_minus_mula(
@@ -84,7 +84,7 @@ class MulaCommands(discord.app_commands.Group):
 
 		if (has_party):
 			gold_item = await mula_service.get_party_gold(user.currentParty)
-			current_gold = dto.PartyGoldDto(**gold_item.value)
+			current_gold = gold_item.value
 
 			gold_change = dto.PartyGoldDto(
 				pp=pp,
@@ -96,6 +96,7 @@ class MulaCommands(discord.app_commands.Group):
 			await interaction.response.send_message("Taking the money from the party bank :ninja:")
 
 			new_gold = mula_service.minus_mula(copy(current_gold), gold_change)
+			await mula_service.track_transaction(user.currentParty, "remove", copy(current_gold), copy(gold_change))
 			
 			embed = embed_service.get_gold_embed(current_gold, user, interaction, new_gold)
 			message = await interaction.channel.send(embed=embed)
@@ -130,7 +131,29 @@ class MulaCommands(discord.app_commands.Group):
 
 			current_party_gold = await mula_service.get_party_gold(user.currentParty)
 
-			embed = embed_service.get_gold_embed(dto.PartyGoldDto(**current_party_gold.value), user, interaction, new_party_gold)
+			await mula_service.track_transaction(user.currentParty, "set", current_party_gold.value, new_party_gold)
+
+			embed = embed_service.get_gold_embed(current_party_gold.value, user, interaction, new_party_gold)
 
 			message = await interaction.channel.send(embed=embed)
 			await message_service.party_money_change(message, user, interaction, new_party_gold, self.bot)
+
+
+	@discord.app_commands.command(
+		name="track",
+		description="View all your party's money transactions"
+	)
+	async def slash_track_gold(
+		self,
+		interaction: discord.Interaction
+	):
+		user = await user_service.get_or_insert_user(interaction.user.id)
+
+		has_party = await user_service.check_user_party(user, interaction)
+
+		if (has_party):
+			transactions = await mula_service.get_transactions(user.currentParty)
+
+			embed = embed_service.get_transaction_embed(user, interaction, transactions)
+
+			await interaction.response.send_message(embed=embed)
