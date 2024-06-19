@@ -4,8 +4,7 @@ from discord import app_commands
 from dotenv import load_dotenv
 import os
 from services import dto, user_service, embed_service, item_service, message_service
-from copy import copy
-from command_groups import mula, party, rope
+from command_groups import mula, party, rope, util
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -18,48 +17,13 @@ def init_bot():
 	BOT.tree.add_command(mula.MulaCommands(name="mula", description="All commands dealing with your party's money", bot=BOT))
 	BOT.tree.add_command(party.PartyCommands(name="party", description="All commands dealing with your party"))
 	BOT.tree.add_command(rope.RopeCommands(name="rope", description="All commands dealing with rope", bot=BOT))
+	BOT.tree.add_command(util.UtilCommands(name="util", description="Utility commands (some only accessible by admin)", bot=BOT))
 
 @BOT.event
 async def on_ready():
 	init_bot()
 	await BOT.tree.sync()
 	print("Bot connected.")
-
-
-@BOT.tree.command(
-	name="sync",
-	description="Sync commands"
-)
-async def slash_sync_admin(
-	interaction: discord.Interaction
-):
-	if interaction.user.id != 251302176192856074:
-		await interaction.channel.send(content="You do not have permission to use this command, please contact @Zodes to use it.", mention_author=True)
-		return
-	
-	await BOT.tree.sync(guild=interaction.channel.guild)
-	await interaction.response.send_message(content="Successfully synced.")
-
-
-@BOT.tree.command(
-	name="purge",
-	description="Purge bot messages"
-)
-async def slash_sync_admin(
-	interaction: discord.Interaction,
-	limit: int = 100
-):
-	if interaction.user.id != 251302176192856074:
-		await interaction.channel.send(content="You do not have permission to use this command, please contact @Zodes to use it.", mention_author=True)
-		return
-
-	def is_bot(m: discord.Message):
-		return m.author.id == BOT.user.id
-	
-	deleted = await interaction.channel.purge(limit=limit, check=is_bot)
-
-	await interaction.channel.send(content=f"Successfully deleted {len(deleted)} messages from {interaction.guild} - {interaction.channel}.")
-
 
 @BOT.tree.command(
 	name="additem",
