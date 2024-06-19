@@ -17,7 +17,6 @@ async def create_or_update_item(
 
 	updated_item = get_update_item(dto.ItemDto(**mongo_item), item)
 	old_item = dto.ItemDto(**mongo_item)
-	old_item.value = old_item.convert_value_to_party_gold_dto()
 
 	return old_item, updated_item
 
@@ -83,7 +82,7 @@ def get_update_item(
 ):
 	updated_item = dto.ItemDto(
 		name = new_item.name,
-		value = mula_service.add_mula(old_item.convert_value_to_party_gold_dto(), new_item.value),
+		value = mula_service.add_mula(old_item.value, new_item.value),
 		rarity = new_item.rarity,
 		notes = update_notes(old_item.notes, new_item.notes),
 		weight = old_item.weight + new_item.weight,
