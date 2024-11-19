@@ -3,7 +3,7 @@ import discord
 class UtilCommands(discord.app_commands.Group):
     ...
 
-    bot: discord.Bot
+    bot: discord.Client
 
     def __init__(self, name, description, bot):
         super(UtilCommands, self).__init__(name=name, description=description)
